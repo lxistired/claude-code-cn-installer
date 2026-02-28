@@ -68,16 +68,12 @@ var
 procedure InitializeWizard();
 begin
   ApiPage := CreateInputOptionPage(wpSelectTasks,
-    '选择 API 提供商',
-    '由于网络限制，中国用户需要使用国产大模型 API',
-    '请选择您计划使用的 API 提供商（安装后可随时更改）：',
+    '配置智谱 GLM API',
+    '由于网络限制，中国用户需要使用智谱 GLM API',
+    '本工具通过智谱 GLM 的 Anthropic 兼容端点接入。安装完成后将引导您配置 API Key。',
     True, False);
 
-  ApiPage.Add('智谱 GLM (ChatGLM) - https://open.bigmodel.cn');
-  ApiPage.Add('DeepSeek - https://platform.deepseek.com');
-  ApiPage.Add('月之暗面 Moonshot/Kimi - https://platform.moonshot.cn');
-  ApiPage.Add('阿里通义千问 Qwen - https://dashscope.aliyuncs.com');
-  ApiPage.Add('百度文心一言 ERNIE - https://qianfan.baidubce.com');
+  ApiPage.Add('智谱 GLM - https://open.bigmodel.cn（安装后配置 API Key）');
   ApiPage.Add('稍后手动配置');
 
   ApiPage.Values[0] := True; // 默认选择 GLM
@@ -86,9 +82,5 @@ end;
 function GetApiProvider(): String;
 begin
   if ApiPage.Values[0] then Result := '1'
-  else if ApiPage.Values[1] then Result := '2'
-  else if ApiPage.Values[2] then Result := '3'
-  else if ApiPage.Values[3] then Result := '4'
-  else if ApiPage.Values[4] then Result := '5'
-  else Result := '7';
+  else Result := '6';
 end;

@@ -108,7 +108,7 @@ Write-Host "    1. 检查并安装 Node.js (使用国内镜像)" -ForegroundColo
 Write-Host "    2. 检查并安装 Git     (使用国内镜像)" -ForegroundColor White
 Write-Host "    3. 配置 npm 国内镜像源" -ForegroundColor White
 Write-Host "    4. 安装 Claude Code (npm)" -ForegroundColor White
-Write-Host "    5. 配置国产大模型 API (DeepSeek/Qwen/GLM/Kimi/ERNIE)" -ForegroundColor White
+Write-Host "    5. 配置智谱 GLM API" -ForegroundColor White
 Write-Host ""
 Write-Host "  注意: 本脚本需要以 管理员身份 运行" -ForegroundColor Yellow
 Write-Host ""
@@ -245,238 +245,83 @@ else {
 }
 
 # ---------------------------------------------------------------------------
-# 步骤 5: 配置国产大模型 API
+# 步骤 5: 配置智谱 GLM API
 # ---------------------------------------------------------------------------
-Write-Step "步骤 5/5: 配置国产大模型 API"
+Write-Step "步骤 5/5: 配置智谱 GLM API"
 
 Write-Host ""
 Write-Host "  ================================================================" -ForegroundColor Yellow
-Write-Host "   由于网络限制，中国用户无法直接使用 Anthropic Claude API" -ForegroundColor Yellow
-Write-Host "   您需要配置一个兼容 OpenAI 格式的国产大模型 API" -ForegroundColor Yellow
+Write-Host "   配置智谱 GLM API，让 Claude Code 通过 GLM 模型运行" -ForegroundColor Yellow
 Write-Host "  ================================================================" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "  请选择您要使用的 API 提供商:" -ForegroundColor White
+Write-Host "  获取 API Key: https://open.bigmodel.cn -> 右上角头像 -> API 密钥 -> 创建" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "    [1] 智谱 GLM (glm-5 旗舰)       - https://open.bigmodel.cn" -ForegroundColor White
-Write-Host "    [2] DeepSeek (V3.2 最新)        - https://platform.deepseek.com" -ForegroundColor White
-Write-Host "    [3] 月之暗面 Kimi (K2.5 旗舰)   - https://platform.moonshot.cn" -ForegroundColor White
-Write-Host "    [4] 阿里通义千问 (Qwen3.5 最新) - https://dashscope.aliyuncs.com" -ForegroundColor White
-Write-Host "    [5] 百度文心 ERNIE (4.5 旗舰)   - https://qianfan.baidubce.com" -ForegroundColor White
-Write-Host "    [6] OpenAI 兼容的其他接口 (自定义)" -ForegroundColor White
-Write-Host "    [7] 暂时跳过，稍后手动配置" -ForegroundColor White
+Write-Host "  可用模型:" -ForegroundColor White
+Write-Host "    [1] glm-5        - 旗舰模型 745B MoE，最强（对标 Claude Opus）  ← 推荐" -ForegroundColor White
+Write-Host "    [2] glm-4.7      - 编程增强 SWE-bench 73.8（对标 Claude Sonnet）" -ForegroundColor White
+Write-Host "    [3] glm-4.5      - Agent 基座，工具调用优化" -ForegroundColor White
+Write-Host "    [4] glm-4.7-flash - 30B MoE 轻量快速（对标 Claude Haiku）" -ForegroundColor White
+Write-Host "    [5] glm-4-flash  - 免费模型，轻量任务" -ForegroundColor White
+Write-Host "    [6] 暂时跳过，稍后手动配置" -ForegroundColor White
 Write-Host ""
 
-$providerChoice = Read-Host "  请输入选项编号 (1-7)"
-
-# 定义各提供商的配置信息
-$providers = @{
-    "1" = @{
-        Name       = "智谱 GLM"
-        BaseUrl    = "https://open.bigmodel.cn/api/paas/v4"
-        Model      = "glm-5"
-        KeyName    = "GLM API Key"
-        GetKeyUrl  = "https://open.bigmodel.cn/usercenter/apikeys"
-        GetKeyHelp = @"
-  获取 API Key 的步骤:
-    1. 打开浏览器访问 https://open.bigmodel.cn
-    2. 注册/登录您的账号
-    3. 点击右上角头像 -> 'API 密钥'
-    4. 点击 '创建 API Key'
-    5. 复制生成的 Key
-"@
-        Models     = @("glm-5", "glm-4.7", "glm-4.5", "glm-4.7-flash", "glm-4-flash")
-        ModelDescs = @("旗舰模型 745B MoE，最强", "编程增强 SWE-bench 73.8", "Agent基座，工具调用优化", "30B MoE 轻量快速", "免费模型")
-    }
-    "2" = @{
-        Name       = "DeepSeek"
-        BaseUrl    = "https://api.deepseek.com"
-        Model      = "deepseek-chat"
-        KeyName    = "DeepSeek API Key"
-        GetKeyUrl  = "https://platform.deepseek.com/api_keys"
-        GetKeyHelp = @"
-  获取 API Key 的步骤:
-    1. 打开浏览器访问 https://platform.deepseek.com
-    2. 注册/登录您的账号
-    3. 进入 'API Keys' 页面
-    4. 点击 '创建 API Key'
-    5. 复制生成的 Key
-"@
-        Models     = @("deepseek-chat", "deepseek-reasoner")
-        ModelDescs = @("V3.2 通用对话+工具调用，最强", "V3.2 深度推理/数学/代码")
-    }
-    "3" = @{
-        Name       = "月之暗面 (Kimi)"
-        BaseUrl    = "https://api.moonshot.cn/v1"
-        Model      = "kimi-k2.5"
-        KeyName    = "Kimi API Key"
-        GetKeyUrl  = "https://platform.moonshot.cn/console/api-keys"
-        GetKeyHelp = @"
-  获取 API Key 的步骤:
-    1. 打开浏览器访问 https://platform.moonshot.cn
-    2. 注册/登录您的账号
-    3. 进入控制台 -> 'API Key 管理'
-    4. 点击 '新建 API Key'
-    5. 复制生成的 Key
-"@
-        Models     = @("kimi-k2.5", "kimi-k2", "moonshot-v1-128k", "moonshot-v1-32k")
-        ModelDescs = @("最新旗舰 1T MoE 多模态+Agent", "K2 推理增强 256K上下文", "经典长文本 128K", "经典 32K")
-    }
-    "4" = @{
-        Name       = "阿里通义千问 (Qwen)"
-        BaseUrl    = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-        Model      = "qwen3.5-plus"
-        KeyName    = "DashScope API Key"
-        GetKeyUrl  = "https://dashscope.console.aliyun.com/apiKey"
-        GetKeyHelp = @"
-  获取 API Key 的步骤:
-    1. 打开浏览器访问 https://dashscope.console.aliyun.com
-    2. 注册/登录您的阿里云账号
-    3. 开通 DashScope 服务
-    4. 进入 'API-KEY 管理'
-    5. 点击 '创建新的 API-KEY'
-    6. 复制生成的 Key
-"@
-        Models     = @("qwen3.5-plus", "qwen3-max", "qwq-plus", "qwen-plus", "qwen-turbo")
-        ModelDescs = @("最新旗舰 397B MoE，最强", "Qwen3 旗舰，万亿参数", "深度推理模型", "性价比之选", "轻量快速低成本")
-    }
-    "5" = @{
-        Name       = "百度文心 (ERNIE)"
-        BaseUrl    = "https://qianfan.baidubce.com/v2"
-        Model      = "ernie-4.5"
-        KeyName    = "千帆 API Key"
-        GetKeyUrl  = "https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application"
-        GetKeyHelp = @"
-  获取 API Key 的步骤:
-    1. 打开浏览器访问 https://qianfan.baidubce.com
-    2. 注册/登录您的百度智能云账号
-    3. 创建应用，获取 API Key 和 Secret Key
-    4. 复制 API Key
-"@
-        Models     = @("ernie-4.5", "ernie-4.5-turbo", "ernie-4.0-turbo", "ernie-3.5")
-        ModelDescs = @("最新旗舰 300B MoE，最强", "快速版 128K上下文", "4.0 系列快速版", "经济实惠")
-    }
-}
+$glmModels = @("glm-5", "glm-4.7", "glm-4.5", "glm-4.7-flash", "glm-4-flash")
+$providerChoice = Read-Host "  请输入选项编号 (1-6)"
 
 if ($providerChoice -ge "1" -and $providerChoice -le "5") {
-    $provider = $providers[$providerChoice]
-    Write-Host ""
-    Write-Info "您选择了: $($provider.Name)"
-    Write-Host ""
-    Write-Host $provider.GetKeyHelp -ForegroundColor Cyan
     Write-Host ""
 
-    # 提示打开浏览器
     $openBrowser = Read-Host "  是否打开浏览器获取 API Key? (Y/n)"
     if ($openBrowser -ne 'n' -and $openBrowser -ne 'N') {
-        Start-Process $provider.GetKeyUrl
+        Start-Process "https://open.bigmodel.cn/usercenter/apikeys"
         Write-Info "已打开浏览器，请获取您的 API Key"
         Write-Host ""
     }
 
-    # 获取 API Key
-    $apiKey = Read-Host "  请输入您的 $($provider.KeyName)"
+    $apiKey = Read-Host "  请输入您的 GLM API Key"
 
     if ([string]::IsNullOrWhiteSpace($apiKey)) {
         Write-Warn "未输入 API Key，跳过配置"
         Write-Warn "您可以稍后运行 configure-api.ps1 进行配置"
     }
     else {
-        # 选择模型
-        Write-Host ""
-        Write-Host "  可用模型:" -ForegroundColor White
-        for ($i = 0; $i -lt $provider.Models.Count; $i++) {
-            $defaultTag = if ($i -eq 0) { " (推荐)" } else { "" }
-            $desc = ""
-            if ($provider.ModelDescs -and $i -lt $provider.ModelDescs.Count) {
-                $desc = " - $($provider.ModelDescs[$i])"
-            }
-            Write-Host "    [$($i+1)] $($provider.Models[$i])$desc$defaultTag" -ForegroundColor White
-        }
-        Write-Host ""
-        $modelChoice = Read-Host "  请选择模型编号 (默认 1)"
-        if ([string]::IsNullOrWhiteSpace($modelChoice)) { $modelChoice = "1" }
-        $modelIndex = [int]$modelChoice - 1
-        if ($modelIndex -lt 0 -or $modelIndex -ge $provider.Models.Count) { $modelIndex = 0 }
-        $selectedModel = $provider.Models[$modelIndex]
+        $modelIndex  = [int]$providerChoice - 1
+        $opusModel   = $glmModels[$modelIndex]          # 用户选择的主力模型
+        $sonnetModel = if ($modelIndex -le 1) { "glm-4.7" } else { $glmModels[$modelIndex] }
+        $haikuModel  = "glm-4.5-air"
 
-        # 写入环境变量
-        Write-Info "正在配置环境变量..."
+        # 智谱 GLM 专用 Anthropic 兼容端点
+        $glmBaseUrl = "https://open.bigmodel.cn/api/anthropic"
 
-        # ANTHROPIC_BASE_URL - Claude Code 使用的基础 URL
-        [System.Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", $provider.BaseUrl, "User")
-        $env:ANTHROPIC_BASE_URL = $provider.BaseUrl
-
-        # API Key - 设置多种格式以确保兼容性
-        [System.Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", $apiKey, "User")
-        $env:ANTHROPIC_API_KEY = $apiKey
-
-        # OpenAI 兼容格式 (部分提供商需要)
-        [System.Environment]::SetEnvironmentVariable("OPENAI_API_KEY", $apiKey, "User")
-        $env:OPENAI_API_KEY = $apiKey
-        [System.Environment]::SetEnvironmentVariable("OPENAI_BASE_URL", $provider.BaseUrl, "User")
-        $env:OPENAI_BASE_URL = $provider.BaseUrl
-
-        # 模型配置
-        [System.Environment]::SetEnvironmentVariable("CLAUDE_CODE_USE_OPENAI", "1", "User")
-        $env:CLAUDE_CODE_USE_OPENAI = "1"
-        [System.Environment]::SetEnvironmentVariable("CLAUDE_MODEL", $selectedModel, "User")
-        $env:CLAUDE_MODEL = $selectedModel
-
-        Write-Info "环境变量配置完成:"
-        Write-Host "    ANTHROPIC_BASE_URL = $($provider.BaseUrl)" -ForegroundColor Gray
-        Write-Host "    ANTHROPIC_API_KEY  = $($apiKey.Substring(0, [Math]::Min(8, $apiKey.Length)))****" -ForegroundColor Gray
-        Write-Host "    OPENAI_BASE_URL    = $($provider.BaseUrl)" -ForegroundColor Gray
-        Write-Host "    CLAUDE_MODEL       = $selectedModel" -ForegroundColor Gray
-
-        # 创建 Claude Code 配置文件
+        # 创建 Claude Code 配置文件（官方推荐方式：通过 env 字段做模型映射）
         $claudeConfigDir = "$env:USERPROFILE\.claude"
         if (-not (Test-Path $claudeConfigDir)) {
             New-Item -ItemType Directory -Path $claudeConfigDir -Force | Out-Null
         }
 
-        # 写入 settings 文件
-        $settingsContent = @"
-{
-  "apiProvider": "third-party",
-  "apiBaseUrl": "$($provider.BaseUrl)",
-  "model": "$selectedModel",
-  "apiKeySource": "env:ANTHROPIC_API_KEY"
-}
-"@
-        $settingsContent | Out-File -FilePath "$claudeConfigDir\settings.json" -Encoding UTF8 -Force
-        Write-Info "Claude Code 配置文件已写入: $claudeConfigDir\settings.json"
-    }
-}
-elseif ($providerChoice -eq "6") {
-    # 自定义 API 配置
-    Write-Host ""
-    Write-Info "自定义 OpenAI 兼容接口配置"
-    Write-Host ""
-
-    $customBaseUrl = Read-Host "  请输入 API Base URL (例如: https://api.example.com/v1)"
-    $customApiKey  = Read-Host "  请输入 API Key"
-    $customModel   = Read-Host "  请输入模型名称 (例如: gpt-4)"
-
-    if (-not [string]::IsNullOrWhiteSpace($customBaseUrl) -and -not [string]::IsNullOrWhiteSpace($customApiKey)) {
-        [System.Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", $customBaseUrl, "User")
-        [System.Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", $customApiKey, "User")
-        [System.Environment]::SetEnvironmentVariable("OPENAI_API_KEY", $customApiKey, "User")
-        [System.Environment]::SetEnvironmentVariable("OPENAI_BASE_URL", $customBaseUrl, "User")
-        [System.Environment]::SetEnvironmentVariable("CLAUDE_CODE_USE_OPENAI", "1", "User")
-
-        if (-not [string]::IsNullOrWhiteSpace($customModel)) {
-            [System.Environment]::SetEnvironmentVariable("CLAUDE_MODEL", $customModel, "User")
+        $settingsObj = [ordered]@{
+            env = [ordered]@{
+                ANTHROPIC_BASE_URL             = $glmBaseUrl
+                ANTHROPIC_API_KEY              = $apiKey
+                ANTHROPIC_DEFAULT_HAIKU_MODEL  = $haikuModel
+                ANTHROPIC_DEFAULT_SONNET_MODEL = $sonnetModel
+                ANTHROPIC_DEFAULT_OPUS_MODEL   = $opusModel
+            }
         }
+        $settingsObj | ConvertTo-Json -Depth 5 | Out-File -FilePath "$claudeConfigDir\settings.json" -Encoding UTF8 -Force
 
-        Write-Info "自定义 API 配置完成"
-    }
-    else {
-        Write-Warn "配置信息不完整，跳过"
+        Write-Info "配置完成:"
+        Write-Host "    ANTHROPIC_BASE_URL             = $glmBaseUrl" -ForegroundColor Gray
+        Write-Host "    ANTHROPIC_API_KEY              = $($apiKey.Substring(0, [Math]::Min(8, $apiKey.Length)))****" -ForegroundColor Gray
+        Write-Host "    ANTHROPIC_DEFAULT_OPUS_MODEL   = $opusModel" -ForegroundColor Gray
+        Write-Host "    ANTHROPIC_DEFAULT_SONNET_MODEL = $sonnetModel" -ForegroundColor Gray
+        Write-Host "    ANTHROPIC_DEFAULT_HAIKU_MODEL  = $haikuModel" -ForegroundColor Gray
+        Write-Info "Claude Code 配置文件已写入: $claudeConfigDir\settings.json"
     }
 }
 else {
     Write-Info "跳过 API 配置"
-    Write-Info "您可以稍后运行 configure-api.ps1 或手动设置环境变量"
+    Write-Info "您可以稍后运行 configure-api.ps1 进行配置"
 }
 
 # ---------------------------------------------------------------------------

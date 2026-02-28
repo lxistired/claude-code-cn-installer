@@ -1,23 +1,27 @@
 # Claude Code 一键安装工具 (Windows 中国版)
 
-面向中国用户的 Claude Code Windows 一键安装工具。自动安装所有依赖，并引导配置国产大模型 API。
+面向中国用户的 Claude Code Windows 一键安装工具。自动安装所有依赖，并引导配置智谱 GLM API。
 
 ## 为什么需要这个工具？
 
 1. **Claude Code** 需要 Node.js 和 Git 环境，对非开发者来说安装配置较为复杂
-2. **中国用户无法直接访问 Anthropic Claude API**，需要使用国产大模型 API 替代
+2. **中国用户无法直接访问 Anthropic Claude API**，需要使用智谱 GLM API 替代
 3. 本工具实现了 **一键式安装 + 傻瓜式配置**，降低使用门槛
 
-## 支持的国产大模型
+## 支持的模型
 
-| 提供商 | 推荐模型 | 可选模型 | 注册地址 |
-|--------|----------|---------|---------|
-| 智谱 GLM | glm-5 (745B 旗舰) | glm-4.7, glm-4.5, glm-4.7-flash, glm-4-flash | https://open.bigmodel.cn |
-| DeepSeek | deepseek-chat (V3.2) | deepseek-reasoner | https://platform.deepseek.com |
-| 月之暗面 (Kimi) | kimi-k2.5 (1T 旗舰) | kimi-k2, moonshot-v1-128k, moonshot-v1-32k | https://platform.moonshot.cn |
-| 阿里通义千问 (Qwen) | qwen3.5-plus (最新旗舰) | qwen3-max, qwq-plus, qwen-plus, qwen-turbo | https://dashscope.aliyuncs.com |
-| 百度文心 (ERNIE) | ernie-4.5 (300B 旗舰) | ernie-4.5-turbo, ernie-4.0-turbo, ernie-3.5 | https://qianfan.baidubce.com |
-| 自定义 | 任意 OpenAI 兼容接口 | — | - |
+本工具通过智谱 GLM 的 Anthropic 兼容端点接入，支持以下模型：
+
+| 模型 | 说明 |
+|------|------|
+| glm-5 | 旗舰模型 745B MoE，最强（对标 Claude Opus） ← 推荐 |
+| glm-4.7 | 编程增强 SWE-bench 73.8（对标 Claude Sonnet） |
+| glm-4.5 | Agent 基座，工具调用优化 |
+| glm-4.7-flash | 30B MoE 轻量快速（对标 Claude Haiku） |
+| glm-4-flash | 免费模型，轻量任务 |
+| glm-4.5-air | 轻量快速，低成本 |
+
+注册地址：https://open.bigmodel.cn
 
 ## 快速开始
 
@@ -50,7 +54,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 2. **检查/安装 Git** - 从国内镜像下载 Git for Windows
 3. **配置 npm 镜像源** - 设置为 npmmirror.com 国内镜像
 4. **安装 Claude Code** - 通过 npm 全局安装 `@anthropic-ai/claude-code`
-5. **配置国产大模型 API** - 交互式引导您选择 API 提供商并输入 API Key
+5. **配置智谱 GLM API** - 交互式引导您选择模型并输入 API Key
 
 ## 配置 API
 
@@ -58,11 +62,10 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 
 安装过程中会引导您完成 API 配置。您需要：
 
-1. 选择一个国产大模型提供商
-2. 在提供商网站注册账号
-3. 获取 API Key
-4. 输入 API Key
-5. 从该提供商的可用模型列表中选择要使用的模型（每个模型都有功能说明）
+1. 在智谱开放平台 (https://open.bigmodel.cn) 注册账号
+2. 获取 API Key（右上角头像 → API 密钥 → 创建）
+3. 输入 API Key
+4. 从可用模型列表中选择要使用的模型
 
 ### 更换/修改 API
 
@@ -74,23 +77,25 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 
 功能包括：
 - 查看当前配置
-- 切换 API 提供商
 - 更换 API Key
+- 重新选择模型
 - 测试 API 连接
 - 清除所有配置
 
-### 手动配置环境变量
+### 手动配置
 
-如果您不想使用配置工具，也可以手动设置以下环境变量：
+如果您不想使用配置工具，也可以手动编辑 `%USERPROFILE%\.claude\settings.json`：
 
-```powershell
-# 在 PowerShell 中设置（永久生效）
-[System.Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", "https://open.bigmodel.cn/api/paas/v4", "User")
-[System.Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "your-api-key-here", "User")
-[System.Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "your-api-key-here", "User")
-[System.Environment]::SetEnvironmentVariable("OPENAI_BASE_URL", "https://open.bigmodel.cn/api/paas/v4", "User")
-[System.Environment]::SetEnvironmentVariable("CLAUDE_CODE_USE_OPENAI", "1", "User")
-[System.Environment]::SetEnvironmentVariable("CLAUDE_MODEL", "glm-5", "User")
+```json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
+    "ANTHROPIC_API_KEY": "your-api-key-here",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.7",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air"
+  }
+}
 ```
 
 ## 使用 Claude Code
@@ -126,23 +131,25 @@ claude --version
 ### Q: npm install 速度很慢怎么办？
 **A:** 安装脚本已自动配置了国内镜像源 (npmmirror.com)。如果仍然慢，请检查网络连接。
 
-### Q: 如何切换到其他 API 提供商？
-**A:** 运行 `配置API.bat`，选择新的提供商并输入 API Key 即可。
+### Q: 如何更换模型或 API Key？
+**A:** 运行 `配置API.bat`，重新输入 API Key 并选择模型即可。
 
 ### Q: API 连接测试失败怎么办？
 **A:** 请检查：
 1. API Key 是否正确
 2. 账户是否有余额
 3. 网络连接是否正常
-4. API 提供商服务是否正常
+4. 智谱平台服务是否正常
 
 ### Q: 支持 Windows 7 吗？
 **A:** 建议使用 Windows 10 或更高版本。Node.js 22.x 不再支持 Windows 7。
 
 ## 技术原理
 
-本工具通过设置 `ANTHROPIC_BASE_URL` 和 `OPENAI_BASE_URL` 等环境变量，将 Claude Code 的 API 请求重定向到国产大模型提供商的 OpenAI 兼容接口。大部分国产大模型都提供了 OpenAI 格式的 API，因此可以无缝替换。
+本工具通过设置 `ANTHROPIC_BASE_URL` 环境变量，将 Claude Code 的 API 请求重定向到智谱 GLM 的 Anthropic 兼容端点 (`https://open.bigmodel.cn/api/anthropic`)。智谱 GLM 提供了与 Anthropic Messages API 格式兼容的接口，因此 Claude Code 可以直接调用 GLM 模型。
+
+通过 `ANTHROPIC_DEFAULT_OPUS_MODEL`、`ANTHROPIC_DEFAULT_SONNET_MODEL`、`ANTHROPIC_DEFAULT_HAIKU_MODEL` 三个环境变量，分别映射 Claude Code 内部使用的 Opus/Sonnet/Haiku 三个模型槽位到具体的 GLM 模型。
 
 ## 许可证
 
-本工具仅供学习和个人使用。Claude Code 的版权归 Anthropic 所有。各大模型 API 的使用须遵守对应提供商的服务条款。
+本工具仅供学习和个人使用。Claude Code 的版权归 Anthropic 所有。智谱 GLM API 的使用须遵守智谱的服务条款。

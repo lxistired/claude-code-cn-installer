@@ -12,13 +12,13 @@ OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
 # ── 内容定义 ──────────────────────────────────────────────
 
 TITLE = "Claude Code 一键安装工具 使用说明"
-SUBTITLE = "Windows 中国版"
+SUBTITLE = "Windows 中国版 — 智谱 GLM"
 
 SECTIONS = [
     {
         "heading": "一、工具简介",
         "paragraphs": [
-            "本工具帮助 Windows 用户一键安装 Claude Code，并自动配置国产大模型 API，无需手动安装 Node.js、Git 等依赖。",
+            "本工具帮助 Windows 用户一键安装 Claude Code，并自动配置智谱 GLM API，无需手动安装 Node.js、Git 等依赖。",
         ],
     },
     {
@@ -39,25 +39,27 @@ SECTIONS = [
             "  - 安装 Git",
             "  - 配置 npm 国内镜像源",
             "  - 安装 Claude Code",
-            "安装完成后，按照提示选择 API 提供商、输入 API Key，并选择要使用的模型",
+            "安装完成后，按照提示选择 GLM 模型、输入 API Key",
         ],
     },
     {
-        "heading": "四、支持的国产大模型",
+        "heading": "四、支持的智谱 GLM 模型",
+        "paragraphs": [
+            "本工具通过智谱 GLM 的 Anthropic 兼容端点接入，注册地址：open.bigmodel.cn",
+        ],
         "table": {
-            "headers": ["提供商", "默认推荐模型", "注册地址"],
+            "headers": ["模型", "说明"],
             "rows": [
-                ["智谱 GLM", "glm-5 (745B旗舰)", "open.bigmodel.cn"],
-                ["DeepSeek", "deepseek-chat (V3.2)", "platform.deepseek.com"],
-                ["月之暗面 Kimi", "kimi-k2.5 (1T旗舰)", "platform.moonshot.cn"],
-                ["阿里通义千问", "qwen3.5-plus (最新)", "dashscope.aliyuncs.com"],
-                ["百度文心", "ernie-4.5 (300B旗舰)", "qianfan.baidubce.com"],
-                ["自定义", "任意兼容接口", "—"],
+                ["glm-5", "旗舰 745B MoE（对标 Opus）推荐"],
+                ["glm-4.7", "编程增强（对标 Sonnet）"],
+                ["glm-4.5", "Agent 基座，工具调用优化"],
+                ["glm-4.7-flash", "30B MoE 轻量快速（对标 Haiku）"],
+                ["glm-4-flash", "免费模型，轻量任务"],
+                ["glm-4.5-air", "轻量快速，低成本"],
             ],
         },
-        "paragraphs": [
-            "请先到对应提供商网站注册账号并获取 API Key，安装时需要输入。",
-            "安装过程中每家提供商都有多个模型可选，您可以根据需要自行切换（如选择推理模型、经济型模型等）。",
+        "paragraphs_after": [
+            "请先到智谱开放平台注册账号并获取 API Key（右上角头像 → API 密钥 → 创建）。",
         ],
     },
     {
@@ -72,14 +74,13 @@ SECTIONS = [
         ],
     },
     {
-        "heading": "六、更换 API / 切换模型",
+        "heading": "六、更换 API Key / 切换模型",
         "paragraphs": [
-            '如需更换 API 提供商、API Key 或切换模型，双击运行「配置API.bat」即可。',
-            '配置时会列出该提供商的所有可用模型（含模型说明），您可以自行选择：',
+            '如需更换 API Key 或切换模型，双击运行「配置API.bat」即可。',
         ],
         "bullets": [
             "查看当前配置（含当前使用的模型名称）",
-            "切换 API 提供商 + 重新选择模型",
+            "重新选择 GLM 模型",
             "更换 API Key",
             "测试 API 连接",
         ],
@@ -184,6 +185,10 @@ def make_docx(path):
                 for j, val in enumerate(row):
                     table.rows[i + 1].cells[j].text = val
             doc.add_paragraph()
+
+        for text in sec.get("paragraphs_after", []):
+            p = doc.add_paragraph(text)
+            p.paragraph_format.space_after = Pt(6)
 
         code_lines = sec.get("code")
         if code_lines:
@@ -313,6 +318,13 @@ def make_pdf(path):
                     pdf.cell(col_w, 7, val, border=1, align="C")
                 pdf.ln()
             pdf.ln(3)
+
+        # 表格后的补充段落
+        pdf.set_font("msyh", "", 10)
+        pdf.set_text_color(30, 30, 30)
+        for text in sec.get("paragraphs_after", []):
+            pdf.multi_cell(0, 6, text)
+            pdf.ln(2)
 
         # 代码块
         code_lines = sec.get("code")
