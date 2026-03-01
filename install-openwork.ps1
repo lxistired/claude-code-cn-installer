@@ -1,5 +1,5 @@
-﻿# ============================================================================
-# OpenCode 一键安装脚本 (Windows)
+# ============================================================================
+# OpenWork 一键安装脚本 (Windows)
 # 面向中国用户 - 接入智谱 GLM Coding Plan
 # ============================================================================
 
@@ -18,7 +18,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 $NODEJS_VERSION   = "22.13.1"    # LTS 版本
 $NODEJS_URL       = "https://npmmirror.com/mirrors/node/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}-x64.msi"
 $NPM_MIRROR       = "https://registry.npmmirror.com"
-$INSTALL_LOG      = "$env:TEMP\opencode-install.log"
+$INSTALL_LOG      = "$env:TEMP\openwork-install.log"
 
 # 智谱 GLM 配置
 $GLM_CODING_API   = "https://open.bigmodel.cn/api/coding/paas/v4"
@@ -115,15 +115,16 @@ function Download-File {
 Clear-Host
 Write-Host ""
 Write-Host "  ================================================================" -ForegroundColor Magenta
-Write-Host "       OpenCode 一键安装工具 (Windows 中国版)" -ForegroundColor Magenta
+Write-Host "       OpenWork 一键安装工具 (Windows 中国版)" -ForegroundColor Magenta
 Write-Host "       接入智谱 GLM Coding Plan - 无需翻墙" -ForegroundColor Magenta
 Write-Host "  ================================================================" -ForegroundColor Magenta
 Write-Host ""
 Write-Host "  本工具将自动完成以下操作:" -ForegroundColor White
-Write-Host "    1. 安装 Node.js     (使用国内镜像)" -ForegroundColor White
+Write-Host "    1. 安装 Node.js          (使用国内镜像)" -ForegroundColor White
 Write-Host "    2. 配置 npm 国内镜像源" -ForegroundColor White
-Write-Host "    3. 安装 OpenCode    (通过 npm)" -ForegroundColor White
-Write-Host "    4. 配置智谱 GLM API (选择模型 + 填写 API Key)" -ForegroundColor White
+Write-Host "    3. 安装 OpenCode         (OpenWork 核心引擎)" -ForegroundColor White
+Write-Host "    4. 安装 OpenWork         (桌面编排工具)" -ForegroundColor White
+Write-Host "    5. 配置智谱 GLM API      (选择模型 + 填写 API Key)" -ForegroundColor White
 Write-Host ""
 Write-Host "  安装完成后即可直接使用，开箱即用！" -ForegroundColor Yellow
 Write-Host ""
@@ -137,12 +138,12 @@ if ($confirm -eq 'Q' -or $confirm -eq 'q') {
 }
 
 # 初始化日志
-"[$(Get-Date)] OpenCode 安装开始" | Out-File -FilePath $INSTALL_LOG -Encoding UTF8
+"[$(Get-Date)] OpenWork 安装开始" | Out-File -FilePath $INSTALL_LOG -Encoding UTF8
 
 # ---------------------------------------------------------------------------
 # 步骤 1: 安装 Node.js
 # ---------------------------------------------------------------------------
-Write-Step "步骤 1/4: 检查 Node.js"
+Write-Step "步骤 1/5: 检查 Node.js"
 
 $skipNode = $false
 if (Test-CommandExists "node") {
@@ -190,7 +191,7 @@ if (-not $skipNode) {
 # ---------------------------------------------------------------------------
 # 步骤 2: 配置 npm 镜像源
 # ---------------------------------------------------------------------------
-Write-Step "步骤 2/4: 配置 npm 国内镜像源"
+Write-Step "步骤 2/5: 配置 npm 国内镜像源"
 
 if (Test-CommandExists "npm") {
     Write-Info "设置 npm 镜像源为: $NPM_MIRROR"
@@ -208,9 +209,9 @@ else {
 }
 
 # ---------------------------------------------------------------------------
-# 步骤 3: 安装 OpenCode
+# 步骤 3: 安装 OpenCode (OpenWork 核心引擎)
 # ---------------------------------------------------------------------------
-Write-Step "步骤 3/4: 安装 OpenCode"
+Write-Step "步骤 3/5: 安装 OpenCode (OpenWork 核心引擎)"
 
 if (Test-CommandExists "npm") {
     Write-Info "正在通过 npm 安装 OpenCode ..."
@@ -227,7 +228,6 @@ if (Test-CommandExists "npm") {
         }
         else {
             Write-Warn "opencode 命令未立即生效，可能需要重启终端"
-            Write-Info "安装完成后请打开新的 PowerShell 窗口运行 'opencode' 命令"
         }
     }
     catch {
@@ -242,16 +242,50 @@ else {
 }
 
 # ---------------------------------------------------------------------------
-# 步骤 4: 配置智谱 GLM API
+# 步骤 4: 安装 OpenWork Orchestrator
 # ---------------------------------------------------------------------------
-Write-Step "步骤 4/4: 配置智谱 GLM API"
+Write-Step "步骤 4/5: 安装 OpenWork Orchestrator"
+
+if (Test-CommandExists "npm") {
+    Write-Info "正在通过 npm 安装 OpenWork Orchestrator ..."
+    Write-Info "（使用国内镜像源，请耐心等待）"
+
+    try {
+        & npm install -g openwork-orchestrator@latest 2>&1 | ForEach-Object {
+            Write-Host "  $_" -ForegroundColor Gray
+        }
+        Refresh-Path
+
+        if (Test-CommandExists "openwork") {
+            Write-Info "OpenWork 安装成功!"
+        }
+        else {
+            Write-Warn "openwork 命令未立即生效，可能需要重启终端"
+            Write-Info "安装完成后请打开新的 PowerShell 窗口运行 'openwork' 命令"
+        }
+    }
+    catch {
+        Write-Err "OpenWork 安装失败: $_"
+        Write-Err "请手动运行: npm install -g openwork-orchestrator@latest"
+    }
+}
+else {
+    Write-Err "npm 不可用，无法安装 OpenWork"
+    Read-Host "  按 Enter 键退出"
+    exit 1
+}
+
+# ---------------------------------------------------------------------------
+# 步骤 5: 配置智谱 GLM API
+# ---------------------------------------------------------------------------
+Write-Step "步骤 5/5: 配置智谱 GLM API"
 
 Write-Host ""
 Write-Host "  ================================================================" -ForegroundColor Yellow
-Write-Host "   配置智谱 GLM API，让 OpenCode 使用国产大模型" -ForegroundColor Yellow
+Write-Host "   配置智谱 GLM API，让 OpenWork 使用国产大模型" -ForegroundColor Yellow
 Write-Host "  ================================================================" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "  智谱 GLM 提供与 OpenCode 完全兼容的 API" -ForegroundColor White
+Write-Host "  智谱 GLM 提供与 OpenWork/OpenCode 完全兼容的 API" -ForegroundColor White
 Write-Host "  无需翻墙，国内直连！" -ForegroundColor White
 Write-Host ""
 Write-Host "  首先，您需要获取 API Key:" -ForegroundColor Cyan
@@ -310,7 +344,7 @@ if ($modelIdx -ge 0 -and $modelIdx -lt $GLM_MODELS.Count) {
 
         $baseUrl = if ($apiTypeChoice -eq "2") { $GLM_GENERAL_API } else { $GLM_CODING_API }
 
-        # 生成 opencode.json 配置文件
+        # 生成 opencode.json 配置文件 (OpenWork 使用 OpenCode 的配置)
         $configDir = "$env:USERPROFILE\.config\opencode"
         if (-not (Test-Path $configDir)) {
             New-Item -ItemType Directory -Path $configDir -Force | Out-Null
@@ -383,18 +417,25 @@ else {
 # ---------------------------------------------------------------------------
 Write-Host ""
 Write-Host "  ================================================================" -ForegroundColor Green
-Write-Host "       安装完成!  OpenCode 已就绪" -ForegroundColor Green
+Write-Host "       安装完成!  OpenWork 已就绪" -ForegroundColor Green
 Write-Host "  ================================================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "  使用方法:" -ForegroundColor White
 Write-Host "    1. 打开一个 新的 PowerShell 或 CMD 窗口" -ForegroundColor White
 Write-Host "    2. 切换到您的项目目录 (cd 您的项目路径)" -ForegroundColor White
-Write-Host "    3. 运行命令: opencode" -ForegroundColor White
+Write-Host "    3. 运行命令:" -ForegroundColor White
+Write-Host ""
+Write-Host "  启动 OpenWork (桌面编排模式):" -ForegroundColor White
+Write-Host "    openwork start --workspace . --approval auto" -ForegroundColor Gray
+Write-Host ""
+Write-Host "  或直接使用 OpenCode (终端模式):" -ForegroundColor White
+Write-Host "    opencode" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  常用命令:" -ForegroundColor White
+Write-Host "    openwork start --workspace . --approval auto  - 启动 OpenWork" -ForegroundColor Gray
+Write-Host "    openwork --help      - 查看 OpenWork 帮助" -ForegroundColor Gray
 Write-Host "    opencode             - 启动 OpenCode 交互界面" -ForegroundColor Gray
-Write-Host "    opencode --help      - 查看帮助" -ForegroundColor Gray
-Write-Host "    opencode --version   - 查看版本" -ForegroundColor Gray
+Write-Host "    opencode --help      - 查看 OpenCode 帮助" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  OpenCode 内部常用操作:" -ForegroundColor White
 Write-Host "    /models              - 切换模型" -ForegroundColor Gray
@@ -421,6 +462,12 @@ if (Test-CommandExists "opencode") {
     Write-Host "    [OK] OpenCode 已安装" -ForegroundColor Green
 } else {
     Write-Host "    [!!] OpenCode 未检测到 (请重启终端后运行 'opencode')" -ForegroundColor Yellow
+}
+
+if (Test-CommandExists "openwork") {
+    Write-Host "    [OK] OpenWork 已安装" -ForegroundColor Green
+} else {
+    Write-Host "    [!!] OpenWork 未检测到 (请重启终端后运行 'openwork')" -ForegroundColor Yellow
 }
 
 $configPath = "$env:USERPROFILE\.config\opencode\opencode.json"

@@ -1,5 +1,5 @@
 ﻿# ============================================================================
-# OpenCode 智谱 GLM API 配置工具
+# OpenWork 智谱 GLM API 配置工具
 # ============================================================================
 
 # Ensure UTF-8 output in both GBK and UTF-8 consoles
@@ -136,7 +136,7 @@ while ($true) {
     Clear-Host
     Write-Host ""
     Write-Host "  ================================================================" -ForegroundColor Magenta
-    Write-Host "       OpenCode 智谱 GLM API 配置工具" -ForegroundColor Magenta
+    Write-Host "       OpenWork 智谱 GLM API 配置工具" -ForegroundColor Magenta
     Write-Host "  ================================================================" -ForegroundColor Magenta
 
     Show-CurrentConfig
@@ -216,7 +216,7 @@ while ($true) {
         Write-Host "    默认模型  = $($selected.Name)" -ForegroundColor Green
         Write-Host ""
         Write-Host "  配置已写入: $CONFIG_PATH" -ForegroundColor Gray
-        Write-Host "  请打开新终端窗口后运行 opencode 启动。" -ForegroundColor Yellow
+        Write-Host "  请打开新终端窗口后运行 openwork 或 opencode 启动。" -ForegroundColor Yellow
         Write-Host ""
         Read-Host "  按 Enter 返回主菜单"
     }
