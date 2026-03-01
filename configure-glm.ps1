@@ -1,7 +1,10 @@
-# ============================================================================
+﻿# ============================================================================
 # OpenCode 智谱 GLM API 配置工具
 # ============================================================================
 
+# Ensure UTF-8 output in both GBK and UTF-8 consoles
+chcp 65001 | Out-Null
+[Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 

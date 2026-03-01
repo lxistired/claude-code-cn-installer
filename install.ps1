@@ -6,6 +6,9 @@
 # 要求以管理员权限运行
 #Requires -RunAsAdministrator
 
+# Ensure UTF-8 output in both GBK and UTF-8 consoles
+chcp 65001 | Out-Null
+[Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
