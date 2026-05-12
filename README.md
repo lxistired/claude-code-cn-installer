@@ -80,7 +80,10 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 - 更换 API Key
 - 重新选择模型
 - 测试 API 连接
+- **配置自定义 Anthropic 兼容 API**（菜单 `[4]`）—— 用其他中转/服务商，自己填 Base URL + Key + 三个模型名
 - 清除所有配置
+
+> **用其他服务商（不是智谱）时注意**：Claude Code 只发 Anthropic Messages API 格式的请求（`/v1/messages`）。所以你买的 API 必须是 **Anthropic 兼容端点**（像智谱的 `/api/anthropic`、或中转服务商提供的 `.../anthropic` 路径）。只支持 **OpenAI 格式**（`/v1/chat/completions`）的 API 无法直接用——那种需要额外的格式转换层。
 
 ### 手动配置
 
@@ -133,6 +136,10 @@ claude --version
 
 ### Q: 如何更换模型或 API Key？
 **A:** 运行 `配置API.bat`，重新输入 API Key 并选择模型即可。
+
+### Q: 我买了其他服务商/中转的 API，怎么用？
+**A:** 运行 `配置API.bat`，选菜单 `[4] 配置自定义 Anthropic 兼容 API`，自己填 Base URL、Key 和三个模型名。
+**前提**：那个 API 必须提供 **Anthropic Messages API 格式**（`/v1/messages`，跟 Claude 官方一样）。只支持 **OpenAI 格式**（`/v1/chat/completions`）的服务商无法直接用——Claude Code 只会发 Anthropic 格式的请求。买之前确认服务商有 "Anthropic 兼容" / "Claude 接入" 这种说法。
 
 ### Q: API 连接测试失败怎么办？
 **A:** 请检查：

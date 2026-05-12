@@ -54,11 +54,10 @@ function Set-ApiConfig {
         [string]$ApiKey,
         [string]$OpusModel,
         [string]$SonnetModel,
-        [string]$HaikuModel
+        [string]$HaikuModel,
+        # 默认智谱 GLM 的 Anthropic 兼容端点；自定义 API 时由调用方传入
+        [string]$BaseUrl = "https://open.bigmodel.cn/api/anthropic"
     )
-
-    # 智谱 GLM 专用 Anthropic 兼容端点（支持 /messages 格式）
-    $BaseUrl = "https://open.bigmodel.cn/api/anthropic"
 
     # 更新 Claude Code 配置文件（官方推荐方式：通过 env 字段做模型映射）
     $claudeConfigDir = "$env:USERPROFILE\.claude"
@@ -118,6 +117,7 @@ while ($true) {
     Write-Host "    [1] 配置 智谱 GLM API Key" -ForegroundColor White
     Write-Host "    [2] 清除 API 配置" -ForegroundColor White
     Write-Host "    [3] 测试当前 API 连接" -ForegroundColor White
+    Write-Host "    [4] 配置自定义 Anthropic 兼容 API (其他中转/服务商)" -ForegroundColor White
     Write-Host "    [Q] 退出" -ForegroundColor White
     Write-Host ""
 
@@ -212,7 +212,10 @@ while ($true) {
         } else {
             try {
                 $settings  = Get-Content $settingsPath -Raw | ConvertFrom-Json
-                $testUrl   = "https://open.bigmodel.cn/api/anthropic/v1/messages"
+                # 从配置文件读 base_url，这样测试也适用于自定义 API（不是写死智谱）
+                $baseUrl   = $settings.env.ANTHROPIC_BASE_URL
+                if ([string]::IsNullOrWhiteSpace($baseUrl)) { $baseUrl = "https://open.bigmodel.cn/api/anthropic" }
+                $testUrl   = ($baseUrl.TrimEnd('/')) + "/v1/messages"
                 $testKey   = $settings.env.ANTHROPIC_API_KEY
                 $testModel = $settings.env.ANTHROPIC_DEFAULT_SONNET_MODEL
 
@@ -258,6 +261,60 @@ while ($true) {
             }
         }
 
+        Write-Host ""
+        Read-Host "  按 Enter 返回主菜单"
+    }
+
+    # ── [4] 配置自定义 Anthropic 兼容 API ─────────────────────────────────────
+    elseif ($choice -eq "4") {
+        Write-Host ""
+        Write-Host "  ── 配置自定义 Anthropic 兼容 API ─────────────────────────" -ForegroundColor Cyan
+        Write-Host "  适用于：其他中转服务商 / 自建网关，只要它提供 Anthropic Messages" -ForegroundColor Gray
+        Write-Host "  API 格式（即 /v1/messages，与 Claude 官方一致）。" -ForegroundColor Gray
+        Write-Host "  注意：只支持 OpenAI 格式（/v1/chat/completions）的服务商无法直接用，" -ForegroundColor Yellow
+        Write-Host "  Claude Code 只会发 Anthropic 格式的请求。" -ForegroundColor Yellow
+        Write-Host ""
+
+        $baseUrl = Read-Host "  请输入 API Base URL (例如 https://your-provider.com/anthropic)"
+        if ([string]::IsNullOrWhiteSpace($baseUrl)) {
+            Write-Host "  [警告] 未输入 Base URL，操作取消" -ForegroundColor Yellow
+            Read-Host "  按 Enter 返回主菜单"
+            continue
+        }
+        $baseUrl = $baseUrl.Trim().TrimEnd('/')
+
+        $apiKey = Read-Host "  请输入 API Key"
+        if ([string]::IsNullOrWhiteSpace($apiKey)) {
+            Write-Host "  [警告] 未输入 API Key，操作取消" -ForegroundColor Yellow
+            Read-Host "  按 Enter 返回主菜单"
+            continue
+        }
+
+        Write-Host ""
+        Write-Host "  请填写三个模型槽位对应的模型名（看你服务商支持哪些）:" -ForegroundColor White
+        Write-Host "  Opus = 主力/复杂任务，Sonnet = 日常，Haiku = 轻量/快速。" -ForegroundColor Gray
+        $opusModel   = Read-Host "  Opus 模型名 (主力)"
+        if ([string]::IsNullOrWhiteSpace($opusModel)) {
+            Write-Host "  [警告] 未输入 Opus 模型名，操作取消" -ForegroundColor Yellow
+            Read-Host "  按 Enter 返回主菜单"
+            continue
+        }
+        $sonnetModel = Read-Host "  Sonnet 模型名 (日常，留空则用 Opus 模型)"
+        if ([string]::IsNullOrWhiteSpace($sonnetModel)) { $sonnetModel = $opusModel }
+        $haikuModel  = Read-Host "  Haiku 模型名 (轻量，留空则用 Sonnet 模型)"
+        if ([string]::IsNullOrWhiteSpace($haikuModel)) { $haikuModel = $sonnetModel }
+
+        Set-ApiConfig -ApiKey $apiKey -OpusModel $opusModel -SonnetModel $sonnetModel -HaikuModel $haikuModel -BaseUrl $baseUrl
+
+        Write-Host ""
+        Write-Host "  [成功] 自定义 API 配置完成!" -ForegroundColor Green
+        Write-Host "  Base URL:      $baseUrl" -ForegroundColor Green
+        Write-Host "  Opus 模型:     $opusModel" -ForegroundColor Green
+        Write-Host "  Sonnet 模型:   $sonnetModel" -ForegroundColor Green
+        Write-Host "  Haiku 模型:    $haikuModel" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "  配置已写入 %USERPROFILE%\.claude\settings.json" -ForegroundColor Gray
+        Write-Host "  可用主菜单 [3] 测试连接验证。请打开新终端窗口后运行 claude。" -ForegroundColor Yellow
         Write-Host ""
         Read-Host "  按 Enter 返回主菜单"
     }
